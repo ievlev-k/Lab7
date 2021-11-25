@@ -102,33 +102,6 @@ public class CollectionManager {
         return newID;
     }
 
-//    public boolean removeFirst() {
-//        int size = listCity.size();
-//        if (size == 0) {
-//            System.out.println("В коллекции нет элементов");
-//            return false;
-//        }
-//
-//
-//        if (size == 1) {
-//            listCity.clear();
-//            return true;
-//        }
-//
-//        if (size > 1) {
-//            listCity.removeFirst();
-////            Iterator<City> iterator = listCity.iterator();
-////            if (iterator.hasNext()) {
-////                City firstDragon = iterator.next();
-////                System.out.println("Был удален первый элемент с id = " + firstDragon.getId());
-////                iterator.remove();
-////
-////                return true;
-////            }
-//            return false;
-//        }
-//        return false;
-//    }
 
 
     public void removeGreater(City c, User otherUser){

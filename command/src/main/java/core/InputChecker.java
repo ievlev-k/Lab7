@@ -6,7 +6,8 @@ package core;
  */
 
 
-public class InputChecker {
+public class
+InputChecker {
     public boolean floatChecker(String s, float min, float max, boolean canEmpty) {
         try {
             float x = Float.parseFloat(s);

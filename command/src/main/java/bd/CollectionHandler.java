@@ -1,10 +1,12 @@
 package bd;
 
+import core.InputChecker;
 import core.UserHandler;
 import datee.*;
 import interaction.User;
 
 
+import java.time.DateTimeException;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.ArrayDeque;
@@ -14,6 +16,7 @@ public class  CollectionHandler {
 
     public DatabaseManager dbManager;
     public UserHandler userHandler;
+    public InputChecker inputChecker;
 
     public CollectionHandler(DatabaseManager dbManager){
         this.dbManager = dbManager;
@@ -27,7 +30,11 @@ public class  CollectionHandler {
             preparedStatement = dbManager.getPreparedStatement(DbConstant.SELECT_ALL_CITY, false);
             ResultSet resultSet = preparedStatement.executeQuery();
             while (resultSet.next()){
-                collection.add(getCityFromSet(resultSet));
+                City city = getCityFromSet(resultSet);
+                if (city == null){
+                    continue;
+                }
+                collection.add(city);
             }
         }catch (SQLException e){
             System.out.println("Ошибка пр загрузке данных!");
@@ -39,32 +46,59 @@ public class  CollectionHandler {
     }
 
     private City getCityFromSet (ResultSet resultSet) throws SQLException{
-        City newCity = new City();
-        long id = resultSet.getInt(DbConstant.CITY_ID);
-        newCity.setId(id);
-        String name = resultSet.getString(DbConstant.CITY_NAME);
-        newCity.setName(name);
-        Coordinates coordinates = new Coordinates(resultSet.getLong(DbConstant.CITY_X), resultSet.getInt(DbConstant.CITY_Y));
-        newCity.setCoordinates(coordinates);
-        ZonedDateTime creationDate = ZonedDateTime.of(resultSet.getTimestamp(DbConstant.CREATION_DATE_COLUMN_IN_CITIES).toLocalDateTime(), ZoneId.of(resultSet.getString(DbConstant.CREATION_DATE_ZONE_COLUMN_IN_CITIES)));
-        newCity.setCreationDate(creationDate);
-        float area = resultSet.getFloat(DbConstant.CITY_AREA);
-        newCity.setArea(area);
-        long population = resultSet.getLong(DbConstant.CITY_POPULATION);
-        newCity.setPopulation(population);
-        int metersAboveSeaLevel = resultSet.getInt(DbConstant.CITY_METERS_ABOVE_SEA_LEVEL);
-        newCity.setMetersAboveSeaLevel(metersAboveSeaLevel);
-        boolean capital = resultSet.getBoolean(DbConstant.CITY_CAPITAL);
-        newCity.setCapital(capital);
-        Government government = Government.valueOf(resultSet.getString(DbConstant.CITY_GOVERNMENT));
-        newCity.setGovernment(government);
-        StandardOfLiving standardOfLiving = StandardOfLiving.valueOf(resultSet.getString(DbConstant.CITY_STANDARD_OF_LIVING));
-        newCity.setStandardOfLiving(standardOfLiving);
-        Human governor = new Human(resultSet.getString(DbConstant.CITY_GOVERNOR));
-        newCity.setHumen(governor);
-        String user = resultSet.getString(DbConstant.USER_NAME);
-        newCity.setUser(user);
-        return newCity;
+        try{
+            City newCity = new City();
+            long id = resultSet.getInt(DbConstant.CITY_ID);
+            if (id < 0) {
+                return null;
+            }
+            newCity.setId(id);
+            String name = resultSet.getString(DbConstant.CITY_NAME);
+            newCity.setName(name);
+            long x = resultSet.getLong(DbConstant.CITY_X);
+            if (x < -847){
+                return null;
+            }
+            Coordinates coordinates = new Coordinates(x, resultSet.getInt(DbConstant.CITY_Y));
+            newCity.setCoordinates(coordinates);
+            try {
+                ZonedDateTime creationDate = ZonedDateTime.of(resultSet.getTimestamp(DbConstant.CREATION_DATE_COLUMN_IN_CITIES).toLocalDateTime(), ZoneId.of(resultSet.getString(DbConstant.CREATION_DATE_ZONE_COLUMN_IN_CITIES)));
+                newCity.setCreationDate(creationDate);
+            } catch (DateTimeException e) {
+                return null;
+            }
+
+            float area = resultSet.getFloat(DbConstant.CITY_AREA);
+            if (area < 0){
+                return null;
+            }
+            newCity.setArea(area);
+            long population = resultSet.getLong(DbConstant.CITY_POPULATION);
+            if (population < 0){
+                return null;
+            }
+            newCity.setPopulation(population);
+            int metersAboveSeaLevel = resultSet.getInt(DbConstant.CITY_METERS_ABOVE_SEA_LEVEL);
+            newCity.setMetersAboveSeaLevel(metersAboveSeaLevel);
+            boolean capital = resultSet.getBoolean(DbConstant.CITY_CAPITAL);
+            newCity.setCapital(capital);
+            try {
+                Government government = Government.valueOf(resultSet.getString(DbConstant.CITY_GOVERNMENT));
+                newCity.setGovernment(government);
+                StandardOfLiving standardOfLiving = StandardOfLiving.valueOf(resultSet.getString(DbConstant.CITY_STANDARD_OF_LIVING));
+                newCity.setStandardOfLiving(standardOfLiving);
+            } catch (IllegalArgumentException e) {
+                return null;
+            }
+            Human governor = new Human(resultSet.getString(DbConstant.CITY_GOVERNOR));
+            newCity.setHumen(governor);
+            String user = resultSet.getString(DbConstant.USER_NAME);
+            newCity.setUser(user);
+            return newCity;
+        }catch (NullPointerException exception){
+            return null;
+        }
+
 
     }
 
